@@ -1,4 +1,4 @@
-package com.xaerostudio.footy
+package com.xaerostudio.footy.ui.fragments.recipes
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
