@@ -1,4 +1,4 @@
-package com.xaerostudio.footy
+package com.xaerostudio.footy.data.network
 
 import com.xaerostudio.footy.models.FoodRecipe
 import retrofit2.Response

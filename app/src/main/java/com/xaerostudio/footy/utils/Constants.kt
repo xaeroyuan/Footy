@@ -1,8 +1,8 @@
-package com.xaerostudio.footy
+package com.xaerostudio.footy.utils
 
 class Constants {
     companion object {
         const val BASE_URL = "https://api.spoonacular.com"
-        const val API_KEY = "2c31df4ac9084e839822991fd32b5dde"
+        const val API_KEY = "504f4ad38f4348fd9845500314bae811"
     }
 }
