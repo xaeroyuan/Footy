@@ -17,6 +17,7 @@ import com.xaerostudio.footy.adapters.RecipesAdapter
 import com.xaerostudio.footy.databinding.FragmentRecipesBinding
 import com.xaerostudio.footy.ui.fragments.recipes.bottomsheet.RecipesBottomSheet
 import com.xaerostudio.footy.utils.Constants.Companion.API_KEY
+import com.xaerostudio.footy.utils.NetworkListener
 import com.xaerostudio.footy.utils.NetworkResult
 import com.xaerostudio.footy.utils.observeOnce
 import com.xaerostudio.footy.viewmodels.MainViewModel
@@ -36,6 +37,7 @@ class RecipesFragment : Fragment() {
     private lateinit var mainViewModel: MainViewModel
     private lateinit var recipesViewModel: RecipesViewModel
     private val args by navArgs<RecipesFragmentArgs>()
+    private lateinit var networkListener: NetworkListener
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,10 +54,27 @@ class RecipesFragment : Fragment() {
         binding.lifecycleOwner = this
         binding.mainViewModel = mainViewModel
         setupRecyclerView()
-        readDatabase()
+
+        recipesViewModel.readBackOnline.observe(viewLifecycleOwner) {
+            recipesViewModel.backOnline = it
+        }
+
+        lifecycleScope.launch {
+            networkListener = NetworkListener()
+            networkListener.checkNetworkAvailability(requireContext()).collect { status ->
+                Log.d("NetworkListener", status.toString())
+                recipesViewModel.networkStatus = status
+                recipesViewModel.showNetworkStatus()
+                readDatabase()
+            }
+        }
 
         binding.recipesFab.setOnClickListener {
-            findNavController().navigate(R.id.action_recipesFragment_to_recipesBottomSheet)
+            if(recipesViewModel.networkStatus) {
+                findNavController().navigate(R.id.action_recipesFragment_to_recipesBottomSheet)
+            } else {
+                recipesViewModel.showNetworkStatus()
+            }
         }
 
         return binding.root
@@ -69,14 +88,14 @@ class RecipesFragment : Fragment() {
 
     private fun readDatabase() {
         lifecycleScope.launch {
-            mainViewModel.readRecipes.observeOnce(viewLifecycleOwner, { database ->
-                if(database.isNotEmpty() && !args.backFromBottomSheet) {
+            mainViewModel.readRecipes.observeOnce(viewLifecycleOwner) { database ->
+                if (database.isNotEmpty() && !args.backFromBottomSheet) {
                     mAdaper.setData(database[0].foodRecipe)
                     hideShimmerEffect()
                 } else {
                     requestApiData()
                 }
-            })
+            }
         }
     }
 
@@ -109,11 +128,11 @@ class RecipesFragment : Fragment() {
 
     private fun loadDataFromCache() {
         lifecycleScope.launch {
-            mainViewModel.readRecipes.observe(viewLifecycleOwner, { database ->
-                if(database.isNotEmpty()) {
+            mainViewModel.readRecipes.observe(viewLifecycleOwner) { database ->
+                if (database.isNotEmpty()) {
                     mAdaper.setData(database[0].foodRecipe)
                 }
-            })
+            }
         }
     }
 

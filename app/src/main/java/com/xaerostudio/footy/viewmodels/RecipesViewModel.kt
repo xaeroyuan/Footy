@@ -1,7 +1,9 @@
 package com.xaerostudio.footy.viewmodels
 
 import android.app.Application
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.xaerostudio.footy.data.DataStoreRepository
 import com.xaerostudio.footy.utils.Constants.Companion.API_KEY
@@ -30,6 +32,10 @@ class RecipesViewModel @Inject constructor(
     private var dietType = DEFAULT_DIET_TYPE
 
     val readMealAndDietType = dataStoreRepository.readMealAndDietType
+    val readBackOnline = dataStoreRepository.readBackOnline.asLiveData()
+
+    var networkStatus = false
+    var backOnline = false
 
     fun saveMealAndDietType(mealType: String, mealTypeId: Int, dietType: String, dietTypeId: Int) =
         viewModelScope.launch (Dispatchers.IO){
@@ -54,5 +60,22 @@ class RecipesViewModel @Inject constructor(
         queries[QUERY_FILL_INGREDIENTS] = "true"
 
         return queries
+    }
+
+    fun saveBackOnline(backOnline: Boolean) =
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStoreRepository.saveBackOnline(backOnline)
+        }
+
+    fun showNetworkStatus() {
+        if(!networkStatus) {
+            Toast.makeText(getApplication(), "No Internet Connection.", Toast.LENGTH_SHORT).show()
+            saveBackOnline(true)
+        } else{
+            if(backOnline) {
+                Toast.makeText(getApplication(), "Back Online.", Toast.LENGTH_SHORT).show()
+                saveBackOnline(false)
+            }
+        }
     }
 }
